@@ -435,6 +435,69 @@
     letter-spacing: 0.3em;
   }
 
+  /* ===== 追加占いセクション ===== */
+  .oracle-section {
+    margin: 14px 0;
+    text-align: center;
+  }
+  .oracle-section-label {
+    font-size: 0.6rem;
+    color: var(--gold);
+    letter-spacing: 0.3em;
+    opacity: 0.8;
+    margin-bottom: 14px;
+  }
+  .oracle-main-value {
+    font-family: 'Philosopher', serif;
+    font-size: 1.45rem;
+    color: var(--gold-light);
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+  .oracle-badge-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .oracle-badge {
+    display: inline-block;
+    background: rgba(240,192,64,0.1);
+    border: 1px solid rgba(240,192,64,0.3);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 0.72rem;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+  }
+  .oracle-kanshi {
+    font-family: 'Philosopher', serif;
+    font-size: 2.8rem;
+    color: var(--gold-light);
+    letter-spacing: 0.3em;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 12px rgba(240,192,64,0.4));
+  }
+  .oracle-name-num {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 2.4rem;
+    color: var(--gold);
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 10px rgba(240,192,64,0.3));
+  }
+  .oracle-desc {
+    font-size: 0.82rem;
+    color: var(--text-main);
+    line-height: 1.85;
+    font-weight: 300;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(240,192,64,0.08);
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: left;
+  }
+
   /* 保存ボタン */
   .save-btn {
     display: flex;
@@ -634,6 +697,44 @@
         </div>
       </div>
 
+      <div class="divider"><span class="divider-star">✦</span></div>
+
+      <!-- 九星気学 -->
+      <div class="oracle-section">
+        <div class="oracle-section-label">✦ 九星気学 ✦</div>
+        <div class="oracle-main-value" id="kyusei-star"></div>
+        <div class="oracle-badge-row">
+          <span class="oracle-badge" id="kyusei-element-badge"></span>
+          <span class="oracle-badge" id="kyusei-dir-badge"></span>
+        </div>
+        <div class="oracle-desc" id="kyusei-desc"></div>
+      </div>
+
+      <div class="divider"><span class="divider-star">✦</span></div>
+
+      <!-- 四柱推命 -->
+      <div class="oracle-section">
+        <div class="oracle-section-label">✦ 四柱推命 ✦</div>
+        <div class="oracle-kanshi" id="shichu-kanshi"></div>
+        <div class="oracle-badge-row">
+          <span class="oracle-badge" id="shichu-element-badge"></span>
+          <span class="oracle-badge" id="shichu-pillar-badge"></span>
+        </div>
+        <div class="oracle-desc" id="shichu-desc"></div>
+      </div>
+
+      <div class="divider"><span class="divider-star">✦</span></div>
+
+      <!-- 名前占い -->
+      <div class="oracle-section">
+        <div class="oracle-section-label">✦ 名前占い ✦</div>
+        <div class="oracle-name-num" id="name-fortune-num"></div>
+        <div class="oracle-badge-row">
+          <span class="oracle-badge" id="name-fortune-badge"></span>
+        </div>
+        <div class="oracle-desc" id="name-fortune-desc"></div>
+      </div>
+
       <div class="card-footer">✦ COSMIC DESTINY ORACLE ✦</div>
     </div>
 
@@ -732,6 +833,63 @@ const MESSAGES = [
   '冬の星座があなたの忍耐力を称えています。積み重ねてきた努力は、やがて満天の星のように輝きを放つでしょう。',
   '双子星のように、あなたの中には二つの力が宿っています。それらが調和する時、奇跡が生まれます。',
 ];
+
+// ===== 九星気学 =====
+const KYUSEI_DATA = [
+  { star: '一白水星', element: '水', dir: '北',   desc: '知性と柔軟性を持ち、流れに乗る才能があります。人との縁を大切に、静かな中に大きな力を秘めています。深い洞察力で物事の本質を見抜きます。' },
+  { star: '二黒土星', element: '土', dir: '南西', desc: '誠実で勤勉、縁の下の力持ち。着実に運を積み上げる粘り強さがあります。母なる大地のような包容力で周囲を支える存在です。' },
+  { star: '三碧木星', element: '木', dir: '東',   desc: '行動力と創造性に溢れ、スピード感が命。新しいことへの挑戦を好み、雷のような突破力で道を切り開きます。' },
+  { star: '四緑木星', element: '木', dir: '東南', desc: '調和と信頼、コミュニケーション力に優れています。縁を結ぶ才能があり、風のように広い人脈を持ちます。信用が財産となります。' },
+  { star: '五黄土星', element: '土', dir: '中央', desc: '強運とカリスマ性を持つ帝王の星。中心的存在となる運命を持ちます。破壊と再生の力を秘め、大きな変革をもたらします。' },
+  { star: '六白金星', element: '金', dir: '北西', desc: '高潔で完璧主義、天から与えられた才能を持ちます。リーダーとしての資質があり、正義を愛し、高い志で人生を歩みます。' },
+  { star: '七赤金星', element: '金', dir: '西',   desc: '魅力と弁才、社交性に恵まれています。人を引きつける不思議な力があり、喜びと豊かさを周囲にもたらす存在です。' },
+  { star: '八白土星', element: '土', dir: '北東', desc: '変革と蓄積、再生の力を持ちます。山のような安定感と粘り強さで、時間をかけて大きな財を成します。' },
+  { star: '九紫火星', element: '火', dir: '南',   desc: '直感・美意識・華やかさを持つ太陽の星。輝く才能と高い精神性があり、人々を照らす光となる運命を持ちます。' },
+];
+
+function getKyuseiStar(year) {
+  // 2024年＝七赤金星(7)を基準に逆算
+  return ((6 - (year - 2024)) % 9 + 9) % 9 + 1;
+}
+
+// ===== 四柱推命（年柱） =====
+const JIKKAN  = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const JUNISHI = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const JIKKAN_ELEMENT = ['木','木','火','火','土','土','金','金','水','水'];
+const ELEMENT_INFO = {
+  '木': { yomi: 'もく', desc: '成長・発展・柔軟性の象徴。春の木のように力強く伸びる生命力を持ちます。人を包む温かさと未来への希望が宿ります。' },
+  '火': { yomi: 'か',   desc: '情熱・変革・輝きの象徴。炎のように周囲を照らし、強い意志でどんな困難も燃やし尽くす力があります。' },
+  '土': { yomi: 'ど',   desc: '安定・誠実・包容力の象徴。大地のように揺るぎない安定感と、すべてを育む母のような包容力があります。' },
+  '金': { yomi: 'こん', desc: '精錬・決断・美の象徴。磨かれた金属のように意志が強く、正義感と審美眼を持ちます。一度決めたことは必ず成し遂げます。' },
+  '水': { yomi: 'すい', desc: '知恵・流動・適応力の象徴。水のように形を変えながらも本質を失わず、深い知性と洞察力で道を切り開きます。' },
+};
+
+function getShichu(year) {
+  const si = ((year - 4) % 10 + 10) % 10;
+  const bi = ((year - 4) % 12 + 12) % 12;
+  const element = JIKKAN_ELEMENT[si];
+  return { kanshi: JIKKAN[si] + JUNISHI[bi], stem: JIKKAN[si], branch: JUNISHI[bi], element, ...ELEMENT_INFO[element] };
+}
+
+// ===== 名前占い =====
+const NAME_FORTUNE = [
+  { keyword: '開拓運', desc: '先頭に立つ使命を持つ「一」の数。独立心が強く、新しい道を切り開くパイオニアです。強い意志と創造力でオンリーワンの世界を築きます。' },
+  { keyword: '協調運', desc: '二つの力を結ぶ「二」の数。調和と協力の天才で、人と人との架け橋となる才能があります。繊細な感性が周囲の心を癒します。' },
+  { keyword: '表現運', desc: '三つの光が輝く「三」の数。コミュニケーションと表現力に恵まれています。明るさと社交性で多くの人を引きつける存在感があります。' },
+  { keyword: '安定運', desc: '大地のように堅固な「四」の数。実直で堅実、一歩一歩着実に運を積み上げます。信頼と誠実さがあなたの最大の財産となります。' },
+  { keyword: '変革運', desc: '自由と変化を愛する「五」の数。冒険心と適応力に満ちています。多彩な経験を通じて魂が磨かれ、豊かな人生が開かれます。' },
+  { keyword: '奉仕運', desc: '愛と責任が宿る「六」の数。家族や仲間への深い愛情と奉仕の精神を持ちます。人を支えることで自身の運も大きく育ちます。' },
+  { keyword: '探求運', desc: '真理を求める「七」の数。鋭い分析力と深い思索力を持つ知恵者です。独自の世界観と洞察力で、隠れた真実を見抜きます。' },
+  { keyword: '繁栄運', desc: '豊かさと成功が宿る「八」の数。強い意志と実行力で大きな成功を引き寄せます。物質的・精神的な豊かさを両立できる器があります。' },
+  { keyword: '完成運', desc: '宇宙の完成を示す「九」の数。高い理想と人類への奉仕の精神を持ちます。人生を通じて魂を磨き、多くの人に影響を与える存在です。' },
+];
+
+function getNameFortune(name) {
+  let sum = [...name].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  while (sum > 9) sum = String(sum).split('').reduce((a, b) => a + parseInt(b), 0);
+  const num = sum || 9;
+  return { num, ...NAME_FORTUNE[num - 1] };
+}
 
 // ===== 数秘術 =====
 function numerologyReduce(n) {
@@ -852,6 +1010,27 @@ function generateFortune() {
     document.getElementById('lucky-stone').textContent = STONES[stoneIdx];
     document.getElementById('lucky-number').textContent = luckyNum;
 
+    // 九星気学
+    const kyuseiNum = getKyuseiStar(year);
+    const kyusei = KYUSEI_DATA[kyuseiNum - 1];
+    document.getElementById('kyusei-star').textContent = kyusei.star;
+    document.getElementById('kyusei-element-badge').textContent = `五行：${kyusei.element}`;
+    document.getElementById('kyusei-dir-badge').textContent = `吉方位：${kyusei.dir}`;
+    document.getElementById('kyusei-desc').textContent = kyusei.desc;
+
+    // 四柱推命
+    const shichu = getShichu(year);
+    document.getElementById('shichu-kanshi').textContent = shichu.kanshi;
+    document.getElementById('shichu-element-badge').textContent = `五行：${shichu.element}（${shichu.yomi}）`;
+    document.getElementById('shichu-pillar-badge').textContent = `${shichu.stem}＋${shichu.branch}`;
+    document.getElementById('shichu-desc').textContent = shichu.desc;
+
+    // 名前占い
+    const nameFortune = getNameFortune(name);
+    document.getElementById('name-fortune-num').textContent = nameFortune.num;
+    document.getElementById('name-fortune-badge').textContent = nameFortune.keyword;
+    document.getElementById('name-fortune-desc').textContent = nameFortune.desc;
+
     // カード表示
     const cardArea = document.getElementById('card-area');
     cardArea.style.display = 'block';
@@ -889,19 +1068,36 @@ function saveCard() {
   const lColor     = document.getElementById('lucky-color').textContent || '';
   const lStone     = document.getElementById('lucky-stone').textContent || '';
   const lNumber    = document.getElementById('lucky-number').textContent || '';
+  const kyuseiStar = document.getElementById('kyusei-star').textContent || '';
+  const kyuseiEl   = document.getElementById('kyusei-element-badge').textContent || '';
+  const kyuseiDir  = document.getElementById('kyusei-dir-badge').textContent || '';
+  const kyuseiDesc = document.getElementById('kyusei-desc').textContent || '';
+  const shichuKan  = document.getElementById('shichu-kanshi').textContent || '';
+  const shichuEl   = document.getElementById('shichu-element-badge').textContent || '';
+  const shichuPil  = document.getElementById('shichu-pillar-badge').textContent || '';
+  const shichuDesc = document.getElementById('shichu-desc').textContent || '';
+  const nameNum    = document.getElementById('name-fortune-num').textContent || '';
+  const nameBadge  = document.getElementById('name-fortune-badge').textContent || '';
+  const nameDesc   = document.getElementById('name-fortune-desc').textContent || '';
 
   const W = 800;
   const SERIF = '"Yu Mincho","Hiragino Mincho ProN","Noto Serif JP",serif';
   const PAD = 60;
 
-  // ── メッセージ行数を事前計算 ──
+  // ── テキスト折り返し事前計算 ──
   const tmp = document.createElement('canvas').getContext('2d');
   tmp.font = `26px ${SERIF}`;
-  const msgLines = wrapText(tmp, message, W - PAD * 2 - 40);
-  const msgBoxH  = msgLines.length * 42 + 70;
+  const msgLines    = wrapText(tmp, message,    W - PAD*2 - 40);
+  const kyuseiLines = wrapText(tmp, kyuseiDesc, W - PAD*2 - 40);
+  const shichuLines = wrapText(tmp, shichuDesc, W - PAD*2 - 40);
+  const nameLines   = wrapText(tmp, nameDesc,   W - PAD*2 - 40);
+  const msgBoxH     = msgLines.length    * 42 + 70;
+  const kyuseiBoxH  = kyuseiLines.length * 42 + 70;
+  const shichuBoxH  = shichuLines.length * 42 + 70;
+  const nameBoxH    = nameLines.length   * 42 + 70;
 
   // ── 全体の高さを確定 ──
-  const H = 60        // top padding
+  const H = 60
     + 36              // TOP LABEL
     + 64              // name
     + 40              // birth
@@ -910,10 +1106,16 @@ function saveCard() {
     + 54              // symbol title
     + 36              // symbol sub
     + 50              // divider
-    + 110 * 2 + 16 + 30  // status grid (2行)
+    + 110*2 + 16 + 30 // status grid
     + msgBoxH + 28    // message
-    + 44 * 4 + 24     // score bars
+    + 44*4 + 24       // score bars
     + 140 + 28        // lucky grid
+    // 九星気学
+    + 50 + 36 + 50 + 50 + kyuseiBoxH + 20
+    // 四柱推命
+    + 50 + 36 + 70 + 50 + shichuBoxH + 20
+    // 名前占い
+    + 50 + 36 + 70 + 50 + nameBoxH + 20
     + 60;             // footer
 
   const cvs = document.createElement('canvas');
@@ -1049,7 +1251,55 @@ function saveCard() {
   });
   y += LH + 24;
 
+  // ── オラクルセクション描画ヘルパー ──
+  function drawOracleSection(title, mainVal, badges, descLines, descBoxH, isKanshi) {
+    // divider
+    y += 14; drawDivider(ctx, W, y, SERIF); y += 28;
+    // title
+    ctx.textAlign = 'center';
+    ctx.font = `18px ${SERIF}`; ctx.fillStyle = 'rgba(240,192,64,0.8)';
+    ctx.fillText(title, W/2, y + 18); y += 34;
+    // main value
+    if (isKanshi) {
+      ctx.font = `bold 64px ${SERIF}`; ctx.fillStyle = '#ffe484';
+      ctx.fillText(mainVal, W/2, y + 56); y += 68;
+    } else {
+      ctx.font = `bold 42px ${SERIF}`; ctx.fillStyle = '#ffe484';
+      ctx.fillText(mainVal, W/2, y + 42); y += 52;
+    }
+    // badges
+    const badgeFont = `20px ${SERIF}`;
+    ctx.font = badgeFont;
+    const totalBW = badges.reduce((s, b) => s + ctx.measureText(b).width + 32, 0) + (badges.length-1)*12;
+    let bx = W/2 - totalBW/2;
+    badges.forEach(badge => {
+      const bw = ctx.measureText(badge).width + 32;
+      ctx.fillStyle = 'rgba(240,192,64,0.1)';
+      rr(ctx, bx, y, bw, 32, 16); ctx.fill();
+      ctx.strokeStyle = 'rgba(240,192,64,0.3)'; ctx.lineWidth = 1;
+      rr(ctx, bx, y, bw, 32, 16); ctx.stroke();
+      ctx.fillStyle = '#f0c040'; ctx.textAlign = 'left';
+      ctx.fillText(badge, bx + 16, y + 22);
+      bx += bw + 12;
+    });
+    y += 44;
+    // desc box
+    ctx.fillStyle = 'rgba(255,255,255,0.02)';
+    rr(ctx, PAD, y, W-PAD*2, descBoxH, 10); ctx.fill();
+    ctx.strokeStyle = 'rgba(240,192,64,0.08)'; ctx.lineWidth = 1;
+    rr(ctx, PAD, y, W-PAD*2, descBoxH, 10); ctx.stroke();
+    ctx.textAlign = 'left';
+    ctx.font = `26px ${SERIF}`; ctx.fillStyle = '#f5e6c8';
+    descLines.forEach((line, i) => ctx.fillText(line, PAD+20, y + 46 + i*42));
+    y += descBoxH + 18;
+  }
+
+  drawOracleSection('✦  九星気学  ✦', kyuseiStar, [kyuseiEl, kyuseiDir], kyuseiLines, kyuseiBoxH, false);
+  drawOracleSection('✦  四柱推命  ✦', shichuKan,  [shichuEl, shichuPil],  shichuLines, shichuBoxH, true);
+  drawOracleSection('✦  名前占い  ✦', nameNum,    [nameBadge],             nameLines,   nameBoxH,   false);
+
   // ── FOOTER ──
+  y += 10;
   ctx.textAlign = 'center';
   ctx.font = `18px ${SERIF}`; ctx.fillStyle = 'rgba(201,176,122,0.4)';
   ctx.fillText('✦  COSMIC DESTINY ORACLE  ✦', W/2, y + 20);
