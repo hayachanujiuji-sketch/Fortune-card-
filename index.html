@@ -874,17 +874,62 @@ function saveCard() {
   const card = document.getElementById('fortune-card');
   const name = document.getElementById('card-name').textContent || 'fortune';
 
+  document.getElementById('loading').classList.add('active');
+
   html2canvas(card, {
-    backgroundColor: '#020818',
+    backgroundColor: '#0a1628',
     scale: 2,
     useCORS: true,
-    allowTaint: true,
-    logging: false
+    allowTaint: false,
+    logging: false,
+    imageTimeout: 15000,
+    onclone: (clonedDoc) => {
+      // backdrop-filter は html2canvas 非対応のため無効化
+      const clonedCard = clonedDoc.getElementById('fortune-card');
+      clonedCard.style.backdropFilter = 'none';
+      clonedCard.style.webkitBackdropFilter = 'none';
+      clonedCard.style.background = 'linear-gradient(145deg, rgb(15,25,55), rgb(8,12,35))';
+
+      // グラデーションテキスト（-webkit-text-fill-color）を固定色に変換
+      const cardName = clonedDoc.getElementById('card-name');
+      if (cardName) {
+        cardName.style.backgroundImage = 'none';
+        cardName.style.webkitBackgroundClip = 'unset';
+        cardName.style.backgroundClip = 'unset';
+        cardName.style.webkitTextFillColor = '#ffe484';
+        cardName.style.color = '#ffe484';
+      }
+    }
   }).then(canvas => {
-    const link = document.createElement('a');
-    link.download = `運勢カード_${name}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    document.getElementById('loading').classList.remove('active');
+    const dataUrl = canvas.toDataURL('image/png');
+
+    // iOS Safari は <a> の click() でダウンロードできないため別処理
+    const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
+    if (isIOS) {
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.write(
+          '<html><body style="margin:0;background:#020818;text-align:center;color:#f0c040;font-family:sans-serif;">' +
+          '<p style="padding:16px;">画像を長押しして「写真に保存」を選んでね ✨</p>' +
+          '<img src="' + dataUrl + '" style="max-width:100%;border-radius:12px;">' +
+          '</body></html>'
+        );
+      } else {
+        alert('ポップアップがブロックされました。ブラウザの設定でポップアップを許可してください。');
+      }
+    } else {
+      const link = document.createElement('a');
+      link.download = `運勢カード_${name}.png`;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }).catch(err => {
+    document.getElementById('loading').classList.remove('active');
+    console.error('保存エラー:', err);
+    alert('保存に失敗しました。もう一度お試しください。');
   });
 }
 
