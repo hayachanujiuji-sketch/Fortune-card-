@@ -884,13 +884,10 @@ function saveCard() {
     logging: false,
     imageTimeout: 15000,
     onclone: (clonedDoc) => {
-      // backdrop-filter は html2canvas 非対応のため無効化
       const clonedCard = clonedDoc.getElementById('fortune-card');
       clonedCard.style.backdropFilter = 'none';
       clonedCard.style.webkitBackdropFilter = 'none';
       clonedCard.style.background = 'linear-gradient(145deg, rgb(15,25,55), rgb(8,12,35))';
-
-      // グラデーションテキスト（-webkit-text-fill-color）を固定色に変換
       const cardName = clonedDoc.getElementById('card-name');
       if (cardName) {
         cardName.style.backgroundImage = 'none';
@@ -903,34 +900,75 @@ function saveCard() {
   }).then(canvas => {
     document.getElementById('loading').classList.remove('active');
     const dataUrl = canvas.toDataURL('image/png');
-
-    // iOS Safari は <a> の click() でダウンロードできないため別処理
-    const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
-    if (isIOS) {
-      const win = window.open('', '_blank');
-      if (win) {
-        win.document.write(
-          '<html><body style="margin:0;background:#020818;text-align:center;color:#f0c040;font-family:sans-serif;">' +
-          '<p style="padding:16px;">画像を長押しして「写真に保存」を選んでね ✨</p>' +
-          '<img src="' + dataUrl + '" style="max-width:100%;border-radius:12px;">' +
-          '</body></html>'
-        );
-      } else {
-        alert('ポップアップがブロックされました。ブラウザの設定でポップアップを許可してください。');
-      }
-    } else {
-      const link = document.createElement('a');
-      link.download = `運勢カード_${name}.png`;
-      link.href = dataUrl;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
+    showSaveModal(dataUrl, name);
   }).catch(err => {
     document.getElementById('loading').classList.remove('active');
     console.error('保存エラー:', err);
     alert('保存に失敗しました。もう一度お試しください。');
   });
+}
+
+function showSaveModal(dataUrl, name) {
+  const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
+
+  const modal = document.createElement('div');
+  modal.style.cssText = [
+    'position:fixed', 'inset:0', 'z-index:200',
+    'background:rgba(2,8,24,0.93)',
+    'display:flex', 'flex-direction:column',
+    'align-items:center', 'justify-content:center',
+    'padding:24px', 'gap:18px', 'overflow-y:auto'
+  ].join(';');
+
+  const msg = document.createElement('p');
+  msg.style.cssText = 'color:#f0c040;font-size:0.9rem;letter-spacing:0.1em;text-align:center;line-height:1.7;';
+  msg.innerHTML = isIOS
+    ? '画像を<strong>長押し</strong>して<br>「写真に保存」を選んでね ✨'
+    : '右クリック→「名前を付けて保存」<br>またはボタンでダウンロード ✨';
+
+  const img = document.createElement('img');
+  img.src = dataUrl;
+  img.style.cssText = 'max-width:100%;max-height:65vh;border-radius:16px;display:block;box-shadow:0 8px 40px rgba(0,0,0,0.6);';
+
+  const btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;justify-content:center;';
+
+  if (!isIOS) {
+    const dlBtn = document.createElement('a');
+    dlBtn.download = `運勢カード_${name}.png`;
+    dlBtn.href = dataUrl;
+    dlBtn.textContent = '💾 ダウンロード';
+    dlBtn.style.cssText = [
+      'padding:12px 28px',
+      'background:linear-gradient(135deg,#c9920a,#f0c040,#c9920a)',
+      'border-radius:12px',
+      'color:#1a0e00',
+      'font-size:0.9rem',
+      'font-weight:bold',
+      'text-decoration:none',
+      'letter-spacing:0.1em'
+    ].join(';');
+    btnRow.appendChild(dlBtn);
+  }
+
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕ 閉じる';
+  closeBtn.style.cssText = [
+    'padding:12px 28px',
+    'background:transparent',
+    'border:1px solid rgba(255,255,255,0.25)',
+    'border-radius:12px',
+    'color:rgba(255,255,255,0.6)',
+    'font-size:0.9rem',
+    'cursor:pointer'
+  ].join(';');
+  closeBtn.onclick = () => document.body.removeChild(modal);
+
+  btnRow.appendChild(closeBtn);
+  modal.appendChild(msg);
+  modal.appendChild(img);
+  modal.appendChild(btnRow);
+  document.body.appendChild(modal);
 }
 
 // Enter キーで実行
