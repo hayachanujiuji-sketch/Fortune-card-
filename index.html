@@ -869,43 +869,223 @@ function generateFortune() {
   }, 1200);
 }
 
-// ===== PNG保存 =====
+// ===== PNG保存（Canvas直接描画方式）=====
 function saveCard() {
-  const card = document.getElementById('fortune-card');
-  const name = document.getElementById('card-name').textContent || 'fortune';
+  const name       = document.getElementById('card-name').textContent || '';
+  const birth      = document.getElementById('card-birth').textContent || '';
+  const symIcon    = document.getElementById('symbol-icon').textContent || '';
+  const symTitle   = document.getElementById('symbol-title').textContent || '';
+  const symSub     = document.getElementById('symbol-sub').textContent || '';
+  const statSign   = document.getElementById('stat-sign').textContent || '';
+  const statNum    = document.getElementById('stat-num').textContent || '';
+  const statStars  = document.getElementById('stat-num-stars').textContent || '';
+  const statDay    = document.getElementById('stat-day').textContent || '';
+  const statPlanet = document.getElementById('stat-planet').textContent || '';
+  const message    = document.getElementById('fortune-message').textContent || '';
+  const valLove    = parseInt(document.getElementById('val-love').textContent)   || 0;
+  const valWork    = parseInt(document.getElementById('val-work').textContent)   || 0;
+  const valMoney   = parseInt(document.getElementById('val-money').textContent)  || 0;
+  const valHealth  = parseInt(document.getElementById('val-health').textContent) || 0;
+  const lColor     = document.getElementById('lucky-color').textContent || '';
+  const lStone     = document.getElementById('lucky-stone').textContent || '';
+  const lNumber    = document.getElementById('lucky-number').textContent || '';
 
-  document.getElementById('loading').classList.add('active');
+  const W = 800;
+  const SERIF = '"Yu Mincho","Hiragino Mincho ProN","Noto Serif JP",serif';
+  const PAD = 60;
 
-  html2canvas(card, {
-    backgroundColor: '#0a1628',
-    scale: 2,
-    useCORS: true,
-    allowTaint: false,
-    logging: false,
-    imageTimeout: 15000,
-    onclone: (clonedDoc) => {
-      const clonedCard = clonedDoc.getElementById('fortune-card');
-      clonedCard.style.backdropFilter = 'none';
-      clonedCard.style.webkitBackdropFilter = 'none';
-      clonedCard.style.background = 'linear-gradient(145deg, rgb(15,25,55), rgb(8,12,35))';
-      const cardName = clonedDoc.getElementById('card-name');
-      if (cardName) {
-        cardName.style.backgroundImage = 'none';
-        cardName.style.webkitBackgroundClip = 'unset';
-        cardName.style.backgroundClip = 'unset';
-        cardName.style.webkitTextFillColor = '#ffe484';
-        cardName.style.color = '#ffe484';
-      }
+  // ── メッセージ行数を事前計算 ──
+  const tmp = document.createElement('canvas').getContext('2d');
+  tmp.font = `26px ${SERIF}`;
+  const msgLines = wrapText(tmp, message, W - PAD * 2 - 40);
+  const msgBoxH  = msgLines.length * 42 + 70;
+
+  // ── 全体の高さを確定 ──
+  const H = 60        // top padding
+    + 36              // TOP LABEL
+    + 64              // name
+    + 40              // birth
+    + 50              // divider
+    + 100             // symbol icon
+    + 54              // symbol title
+    + 36              // symbol sub
+    + 50              // divider
+    + 110 * 2 + 16 + 30  // status grid (2行)
+    + msgBoxH + 28    // message
+    + 44 * 4 + 24     // score bars
+    + 140 + 28        // lucky grid
+    + 60;             // footer
+
+  const cvs = document.createElement('canvas');
+  cvs.width  = W;
+  cvs.height = H;
+  const ctx  = cvs.getContext('2d');
+  let y = 0;
+
+  // ── 背景 ──
+  ctx.save();
+  rr(ctx, 0, 0, W, H, 28); ctx.clip();
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, '#0f1937');
+  bg.addColorStop(1, '#08080c');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+  ctx.strokeStyle = 'rgba(240,192,64,0.35)'; ctx.lineWidth = 2;
+  rr(ctx, 1, 1, W-2, H-2, 28); ctx.stroke();
+
+  // ── TOP LABEL ──
+  y = 56;
+  ctx.textAlign = 'center';
+  ctx.font = `18px ${SERIF}`;
+  ctx.fillStyle = 'rgba(240,192,64,0.7)';
+  ctx.fillText('✦  YOUR COSMIC DESTINY CARD  ✦', W/2, y);
+
+  // ── NAME ──
+  y += 56;
+  ctx.font = `bold 52px ${SERIF}`;
+  ctx.fillStyle = '#ffe484';
+  ctx.fillText(name, W/2, y);
+
+  // ── BIRTH ──
+  y += 38;
+  ctx.font = `24px ${SERIF}`;
+  ctx.fillStyle = '#c9b07a';
+  ctx.fillText(birth, W/2, y);
+
+  // ── DIVIDER ──
+  y += 40; drawDivider(ctx, W, y, SERIF); y += 16;
+
+  // ── SYMBOL ──
+  y += 10;
+  ctx.font = '72px serif';
+  ctx.fillText(symIcon, W/2, y + 66);
+  y += 90;
+  ctx.font = `bold 38px ${SERIF}`;
+  ctx.fillStyle = '#ffe484';
+  ctx.fillText(symTitle, W/2, y + 36);
+  y += 46;
+  ctx.font = `22px ${SERIF}`;
+  ctx.fillStyle = '#c9b07a';
+  ctx.fillText(symSub, W/2, y + 18);
+  y += 34;
+
+  // ── DIVIDER ──
+  y += 16; drawDivider(ctx, W, y, SERIF); y += 28;
+
+  // ── STATUS GRID ──
+  const GW = (W - PAD*2 - 20) / 2, GH = 110;
+  const gridItems = [
+    { label: '誕生月の星座', val: statSign },
+    { label: '生命数',       val: statNum,    sub: statStars },
+    { label: '誕生曜日',     val: statDay },
+    { label: '守護星',       val: statPlanet },
+  ];
+  gridItems.forEach((it, i) => {
+    const gx = PAD + (i % 2) * (GW + 20);
+    const gy = y  + Math.floor(i / 2) * (GH + 16);
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    rr(ctx, gx, gy, GW, GH, 14); ctx.fill();
+    ctx.strokeStyle = 'rgba(240,192,64,0.15)'; ctx.lineWidth = 1;
+    rr(ctx, gx, gy, GW, GH, 14); ctx.stroke();
+    ctx.textAlign = 'center';
+    ctx.font = `18px ${SERIF}`; ctx.fillStyle = 'rgba(240,192,64,0.8)';
+    ctx.fillText(it.label, gx + GW/2, gy + 30);
+    ctx.font = `bold 30px ${SERIF}`; ctx.fillStyle = '#f5e6c8';
+    ctx.fillText(it.val, gx + GW/2, gy + 68);
+    if (it.sub) {
+      ctx.font = `22px ${SERIF}`; ctx.fillStyle = '#f0c040';
+      ctx.fillText(it.sub, gx + GW/2, gy + 96);
     }
-  }).then(canvas => {
-    document.getElementById('loading').classList.remove('active');
-    const dataUrl = canvas.toDataURL('image/png');
-    showSaveModal(dataUrl, name);
-  }).catch(err => {
-    document.getElementById('loading').classList.remove('active');
-    console.error('保存エラー:', err);
-    alert('保存に失敗しました。もう一度お試しください。');
   });
+  y += 2 * (GH + 16) + 16;
+
+  // ── MESSAGE BOX ──
+  ctx.fillStyle = 'rgba(240,192,64,0.05)';
+  rr(ctx, PAD, y, W - PAD*2, msgBoxH, 16); ctx.fill();
+  ctx.strokeStyle = 'rgba(240,192,64,0.2)'; ctx.lineWidth = 1;
+  rr(ctx, PAD, y, W - PAD*2, msgBoxH, 16); ctx.stroke();
+  ctx.textAlign = 'center';
+  ctx.font = `18px ${SERIF}`; ctx.fillStyle = 'rgba(240,192,64,0.8)';
+  ctx.fillText('✦  宇宙からのメッセージ  ✦', W/2, y + 28);
+  ctx.textAlign = 'left';
+  ctx.font = `26px ${SERIF}`; ctx.fillStyle = '#f5e6c8';
+  msgLines.forEach((line, i) => ctx.fillText(line, PAD + 20, y + 64 + i * 42));
+  y += msgBoxH + 24;
+
+  // ── SCORE BARS ──
+  const BX = PAD + 84, BW = W - PAD*2 - 84 - 36;
+  [['愛と縁', valLove], ['仕事運', valWork], ['財運', valMoney], ['健康運', valHealth]].forEach(([label, val]) => {
+    ctx.textAlign = 'left';
+    ctx.font = `24px ${SERIF}`; ctx.fillStyle = '#c9b07a';
+    ctx.fillText(label, PAD, y + 22);
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    rr(ctx, BX, y + 8, BW, 14, 7); ctx.fill();
+    const fg = ctx.createLinearGradient(BX, 0, BX + BW, 0);
+    fg.addColorStop(0, '#b8860b'); fg.addColorStop(1, '#ffe484');
+    ctx.fillStyle = fg;
+    rr(ctx, BX, y + 8, BW * val / 10, 14, 7); ctx.fill();
+    ctx.textAlign = 'right';
+    ctx.font = `bold 24px ${SERIF}`; ctx.fillStyle = '#f0c040';
+    ctx.fillText(val, W - PAD, y + 22);
+    y += 44;
+  });
+  y += 20;
+
+  // ── LUCKY GRID ──
+  const LW = (W - PAD*2 - 20) / 3, LH = 130;
+  [['🎨','ラッキーカラー', lColor], ['💎','パワーストーン', lStone], ['🔢','ラッキーナンバー', lNumber]].forEach(([icon, label, val], i) => {
+    const lx = PAD + i * (LW + 10);
+    ctx.fillStyle = 'rgba(255,255,255,0.03)';
+    rr(ctx, lx, y, LW, LH, 12); ctx.fill();
+    ctx.strokeStyle = 'rgba(240,192,64,0.12)'; ctx.lineWidth = 1;
+    rr(ctx, lx, y, LW, LH, 12); ctx.stroke();
+    ctx.textAlign = 'center';
+    ctx.font = '34px serif'; ctx.fillStyle = '#fff';
+    ctx.fillText(icon, lx + LW/2, y + 44);
+    ctx.font = `16px ${SERIF}`; ctx.fillStyle = 'rgba(240,192,64,0.7)';
+    ctx.fillText(label, lx + LW/2, y + 72);
+    ctx.font = `bold 22px ${SERIF}`; ctx.fillStyle = '#f5e6c8';
+    ctx.fillText(val, lx + LW/2, y + 104);
+  });
+  y += LH + 24;
+
+  // ── FOOTER ──
+  ctx.textAlign = 'center';
+  ctx.font = `18px ${SERIF}`; ctx.fillStyle = 'rgba(201,176,122,0.4)';
+  ctx.fillText('✦  COSMIC DESTINY ORACLE  ✦', W/2, y + 20);
+
+  showSaveModal(cvs.toDataURL('image/png'), name);
+}
+
+// テキスト折り返し
+function wrapText(ctx, text, maxW) {
+  const lines = [];
+  let line = '';
+  for (const ch of [...text]) {
+    const test = line + ch;
+    if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = ch; }
+    else line = test;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+// 区切り線
+function drawDivider(ctx, W, y, serif) {
+  const g = ctx.createLinearGradient(60, 0, W-60, 0);
+  g.addColorStop(0, 'transparent');
+  g.addColorStop(0.5, 'rgba(240,192,64,0.3)');
+  g.addColorStop(1, 'transparent');
+  ctx.strokeStyle = g; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(60, y); ctx.lineTo(W-60, y); ctx.stroke();
+  ctx.textAlign = 'center';
+  ctx.font = `20px ${serif}`; ctx.fillStyle = '#f0c040';
+  ctx.fillText('✦', W/2, y + 8);
+}
+
+// 角丸パス
+function rr(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, r);
 }
 
 function showSaveModal(dataUrl, name) {
